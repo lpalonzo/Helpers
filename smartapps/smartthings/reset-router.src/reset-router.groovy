@@ -24,51 +24,92 @@ definition(
     iconX2Url: "https://cdn3.iconfinder.com/data/icons/ikooni-flat-devices-technologies/128/devices-15-512.png"
 )
 
-preferences {
-	section("Which switch is the router plugged?") {
-		input "theSwitch", "capability.switch"
-	}
-	section("Delay required? (Secs)") {
-		input "secondsLater", "number", title: "How many?"
-	}
+def action_image_bullet      = "http://ogdcl.com/images/arrow-left.png"
+    
+preferences 
+{
+
+    
+
+	section("Which switch is the router plugged?") 
+    {
+        input "timeOfDaySelection", "enum", title: "En un momento especifico del dia:", required: false, multiple: false, submitOnChange:true, options: ["Al amanecer", "Al atardecer"], description: "Seleccionar..", image: "http://icons.iconarchive.com/icons/paomedia/small-n-flat/1024/clock-icon.png"
+        input "OffsetValue", "number", title: "Retrasar o Adelantar este tiempo:", required: false, submitOnChange:true, description: "Minutos", image: action_image_bullet
+        input "OffsetDir"  , "enum", title: "Escoge la acción:", description: "Seleccionar..", required: OffsetValue, submitOnChange:true, options: ["Retrasar","Adelantar"], image: action_image_bullet
+    }
+
+        
+	
 }
 
 def installed() {
 	subscribe(app, appTouch)
-    subscribe(location, "routineExecuted", routineChanged)
+    subscribeToEvents()
 }
 
 def updated() {
     unsubscribe()
 	subscribe(app, appTouch)
-    subscribe(location, "routineExecuted", routineChanged)
+    subscribeToEvents()
+    
 }
+
+def subscribeToEvents()
+{
+    if (timeOfDaySelection)
+    {
+		TimeforEventsHandler()
+    }
+}
+
 
 def appTouch(evt)
 {
-	resetRouter()
+	sunriseSunsetTimeHandler()
 }
 
-def resetRouter()
+
+def TimeforEventsHandler()
 {
-    turnOffSwitch()
-	runIn(secondsLater, turnOnSwitch)
+    switch (timeOfDaySelection) 
+    {
+    	case "Al amanecer":
+        	subscribe(location, "sunriseTime", sunriseSunsetTimeHandler )
+            break
+        case "Al atardecer":
+        	subscribe(location, "sunsetTime", sunriseSunsetTimeHandler)
+            break
+        case "Especificar":
+        	if (timeOfDay) 
+    		{
+				schedule(timeOfDay, scheduledTimeHandler)
+			}
+            break
+        default:
+        	break
+    }
 }
 
-def turnOnSwitch() {
-	theSwitch.on()
-}
-
-def turnOffSwitch() {
-	theSwitch.off()
-}
-
-def routineChanged(evt)
+def sunriseSunsetTimeHandler(evt) 
 {
-   def name = evt.displayName
-   if (name == 'The Internet')
-   {
-   		resetRouter()
-   }
-
+	 
+	 def checkSun = getSunriseAndSunset()
+	 def riseTime = getSunriseAndSunset().sunrise.time
+	 def setTime  = getSunriseAndSunset().sunset.time 
+	 def Now      = new Date().format("HH:mm", location.timeZone)
+     
+     
+     
+     def newRise		=  new Date(riseTime).format("HH:mm", location.timeZone)
+     def newRiseWOffset =  new Date(riseTime - (OffsetValue*60*1000 )).format("HH:mm", location.timeZone)
+     def newSet      	=  new Date(setTime ).format("HH:mm", location.timeZone)
+     def newNow      	=  Now
+	 
+     log.debug " "
+     log.trace "riseTime = $newRise   "
+     log.trace "riseTimeWO = $newRiseWOffset   "
+     log.trace "setTime  = $newSet    "
+     log.trace "Now      = $newNow    "
+	 
+	 
 }
