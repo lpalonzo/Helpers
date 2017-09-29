@@ -2,11 +2,12 @@ definition(
     name: "Romantic",
     namespace: "lpalonzo",
     author: "LP",
-    description: "Escenario para arrimarlo",
+    description: "App under Development",
     category: "Convenience",
     iconUrl: "http://i2.kym-cdn.com/entries/icons/original/000/008/549/Naamloos-2.png",
     iconX2Url: "http://i2.kym-cdn.com/entries/icons/original/000/008/549/Naamloos-2.png"
 )
+import groovy.json.JsonSlurper
 
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //  PREFERENCES
@@ -94,7 +95,7 @@ def Usuarios()
                     required: false, ""
                     
                     input new_name		,	"text", title: "Nombre:",  required: false, description: "Ingresar..", image: "https://cdn3.iconfinder.com/data/icons/business-office-2/512/card_employer_badge_identification-512.png"
-                    input new_code		, 	"enum", title: "Asociar a este código:", required: false,  image: "https://cdn3.iconfinder.com/data/icons/edition/100/keycode-512.png", description: "Seleccionar..",  options: ["Code 1", "Code 2", "Code 3", "Code 4", "Code 5", "App", "Manual"] 
+                    input new_code		, 	"enum", title: "Asociar a este código:", required: false,  image: "https://cdn3.iconfinder.com/data/icons/edition/100/keycode-512.png", description: "Seleccionar..",  options: ["Code 1", "Code 2", "Code 3", "Code 4", "Code 5", "App"] 
                		input new_presence	,	"capability.presenceSensor", title: "Asociar a este dispositivo:", required: false, multiple: false, submitOnChange: true, description: "Seleccionar..", image: "http://icon-park.com/imagefiles/location_map_pin_purple5.png"	 
                     input new_arrivals	,	"bool", title: "Notificar cuando llegue?"   , required: false, submitOnChange: true, image: "http://flyavp.com/wp-content/themes/AVP/library/images/Arrivals_blue.png"      	           	
 		            input new_departures,	"bool", title: "Notificar cuando se marche?", required: false, submitOnChange: true, image: "https://userscontent2.emaze.com/images/d5437e72-fe68-4010-b4e8-1ace56fd27c7/e7ff4de3-f191-425f-b5a1-acfba7e3793c.png"      	           	       
@@ -208,8 +209,11 @@ def Cerraduras()
                     {                    	   
                   		input new_autolock,    		"number", title: "Autobloqueo", required:false, hideWhenEmpty: !(settings."lock_${x}" != null), description: "Cerrar puerta despues de..(segundos)", image: "https://cdn2.iconfinder.com/data/icons/apple-inspire-white/100/Apple-11-128.png"
                     	input new_notify_unlock,	"bool", title: "Notificar cuando alguien llegue?", required: false, submitOnChange: true, image: "https://cdn3.iconfinder.com/data/icons/web-icons-1/64/Unlock-512.png"
-                        input new_notify_who, 		"bool", title: "Notificar quien llega?", required: false, submitOnChange: true, image: "https://cdn3.iconfinder.com/data/icons/aviation-2/505/Aviation-37-128.png"      	           	
-                    	input new_schedules, "enum", title: "Cuántos horarios diferentes a automatizar?", required: false, submitOnChange: true, description: "Seleccionar..", options: ["1","2","3","4","5"], image: "https://icon-icons.com/icons2/516/PNG/512/calendar_clock_schedule_icon-icons.com_51085.png"
+                        if (settings."notify_unlock_${x}" == true)
+                        {
+                        	input new_notify_who, 		"bool", title: "Notificar quien llega?", hideWhenEmpty: !(settings."notify_unlock_${x}" == true), required: false, submitOnChange: true, image: "https://cdn3.iconfinder.com/data/icons/aviation-2/505/Aviation-37-128.png"      	           	
+                    	}
+                        input new_schedules, "enum", title: "Cuántos horarios diferentes a automatizar?", required: false, submitOnChange: true, description: "Seleccionar..", options: ["1","2","3","4","5"], image: "https://icon-icons.com/icons2/516/PNG/512/calendar_clock_schedule_icon-icons.com_51085.png"
                     }                               
                 }
                              
@@ -294,7 +298,7 @@ def Cerraduras()
                                     input new_turnoff, "capability.switch", title: "Apagar estos dispositivos"  ,  multiple: true, required: false, submitOnChange: true, description: "Seleccionar..", image: "https://cdn0.iconfinder.com/data/icons/superuser-web-kit/512/680455-button_switch_power_option_control_lever_off-512.png"
                                     if (settings."turnoff_${x}_${i}" != null ) 
                                     {  
-                                        input new_turnoffdelay, "number", title: "Retrasar la accion este tiempo:", required:false, description: "Opcional(Segundos)", image: "https://cdn3.iconfinder.com/data/icons/transfers/100/239345-reload_time_delay-512.png"
+                                        input new_turnoffdelay, "number", title: "Retrasar la accion este tiempo:", required:false, description: "Opcional(Minutos)", image: "https://cdn3.iconfinder.com/data/icons/transfers/100/239345-reload_time_delay-512.png"
                                     }
 
                                     //Altavoces                     
@@ -355,9 +359,11 @@ def Seguridad()
             ""
             
             input "controlAccess", "bool", title: "Control de Acceso (Alguien viene/Todos se van)", required: false, submitOnChange: true, image: "https://cdn0.iconfinder.com/data/icons/public-signs-2/80/Public_signs-04-512.png"      	           	       
-            input "controlModes" , "bool", title: "Control de Modos", required: false, submitOnChange: true, image: "https://d13yacurqjgara.cloudfront.net/users/39315/screenshots/1732030/dribbble-dms-icons.png"      	           	       
-           	input "controlAlarm" , "bool", title: "Control de Alarma", required: false, submitOnChange: true, image: "https://maxcdn.icons8.com/Color/PNG/512/City/fire_alarm-512.png"      	           	       
-       
+            if (controlAccess)
+            {
+            	input "controlModes" , "bool", title: "Control de Modos",  hideWhenEmpty: !controlAccess, required: false, submitOnChange: true, image: "https://d13yacurqjgara.cloudfront.net/users/39315/screenshots/1732030/dribbble-dms-icons.png"      	           	       
+           		input "controlAlarm" , "bool", title: "Control de Alarma", hideWhenEmpty: !controlAccess, required: false, submitOnChange: true, image: "https://maxcdn.icons8.com/Color/PNG/512/City/fire_alarm-512.png"      	           	       
+       		}
         }
         
         section() 
@@ -367,8 +373,22 @@ def Seguridad()
             required: false,
             ""                    
             input	"intruderSW",  "capability.switch", title: "Interruptor de Alerta", description: "Seleccionar..", required: false, multiple: false, submitOnChange: true, image: "http://contactcarelifeline.co.uk/wp-content/themes/contactcare/img/logos/icon_button_color.png"
-        	input	"alarmLights", "capability.light",  title: "Luz de Alerta:", multiple: true, required: false, submitOnChange: true, description: "Seleccionar..", image: "https://cdn0.iconfinder.com/data/icons/flat-vector-1/100/14-Alert-512.png"
-                        
+        	if (intruderSW != null)
+            {
+            	input	"alarmLights", "capability.light",  title: "Luz de Alerta:", multiple: true, hideWhenEmpty: !(intruderSW != null), required: false, submitOnChange: true, description: "Seleccionar..", image: "https://cdn0.iconfinder.com/data/icons/flat-vector-1/100/14-Alert-512.png"
+            }            
+        }
+        section()
+        {
+        	paragraph image: "http://es.seaicons.com/wp-content/uploads/2016/03/Misc-Settings-icon.png",
+            title: "Otros Ajustes",
+            required: false,
+            ""   
+            input "midday"  	 , "time", title: "MedioDia"  , description: "Seleccionar..", required: false, submitOnChange: true, image: "https://cdn4.iconfinder.com/data/icons/time-line/512/daytime-512.png"
+            input "midnight"	 , "time", title: "MediaNoche", description: "Seleccionar..", required: false, submitOnChange: true, image: "https://cdn4.iconfinder.com/data/icons/time-line/512/night_time-512.png"			
+        	input "alarmLateTime", "time", title: "Alarma Nocturna", description: "Iniciar desde esta hora..", required: controlModes || controlAlarm, submitOnChange: true, image: "https://cdn2.iconfinder.com/data/icons/business-and-finance-related-hand-gestures/256/time_timepiece_late_lateness_rush_watch_clock-512.png"
+        	input "entryLight"	 ,  "capability.switch", title: "Luz de Entrada", description: "Encender esta luz al llegar..", required: false, multiple: true, submitOnChange: true, image: "https://www.shareicon.net/data/512x512/2016/09/01/822230_tool_512x512.png"
+
         }
     }
 }
@@ -446,31 +466,31 @@ def suscribeAll()
 
 def appTouch(evt)
 {   
-	def counter = number_of_scenarios as Integer
-    for (int i = 1; i<= counter; i++)
-    {
-    	def device = settings."lock_${i}"
-        def schedu = settings."schedules_${i}"
-        
-        if (device != null) log.info "Lock ${i}: $device"
-        if (schedu != null) log.warn "Schedules ${i}: $schedu"
-        
-        def counter2 = schedu as Integer
-        for (int x = 1; x<= counter; x++)
-    	{
-        	def tipoHorario = settings."fromtime_${i}_${x}"
-            if (tipoHorario != null) log.error "tipo: $tipoHorario"
-    	}
-    }
+	log.info "Tap something else dumbass!"
     
 }
 
 def lockHandler(evt)
 {
 	log.info "HomeTap Started: $app.label (LockHandler)"
-    def counter 	= number_of_scenarios as Integer
-    def thisGuy     = evt.device as String
-    def thisHappen	= evt.value  as String
+    
+    def counter 		= number_of_scenarios as Integer
+    def thisGuy     	= evt.device as String
+    def thisHappen		= evt.descriptionText  as String
+    def wasManual		= false
+   	def lockData 		= ""
+    def thisCode 		= 0
+    
+    if( evt.data != null)
+    {
+        lockData = new JsonSlurper().parseText(evt.data)
+        thisCode = lockData.usedCode as Integer
+    }
+    
+    
+    if (thisHappen.contains("manually")) 	wasManual = true //Unlocked manually
+    else 									wasManual = false //Unlocked with code or app
+    
     
     for (int x = 1; x <= counter; x++) 
     { 
@@ -481,7 +501,7 @@ def lockHandler(evt)
 			 if ( (locks as String) == thisGuy)
              {
              	log.info "Event = $thisGuy is $thisHappen"
-                Action_Lock(x)
+                Action_Lock(x, wasManual, thisCode)
              }
         
         }
@@ -497,8 +517,58 @@ def arrivalHandler(evt)
 {
 	log.info "HomeTap Started: $app.label (ArrivalHandler)"
     
+    def currentTime  	= now()
+    def riseTime 	 	= getSunriseAndSunset().sunrise.time
+	def setTime  		= getSunriseAndSunset().sunset.time 
     
+    def timeStart 		= new Date(setTime).format("HH:mm", location.timeZone)
+    def timeStop  		= new Date(riseTime).format("HH:mm", location.timeZone)
     
+    def counter 		= number_of_users as Integer
+    def thisGuy     	= evt.device as String
+    def result			= 0
+    def name			= ""
+    def arrivals		= false
+    
+    if (timeOfDayIsBetween(timeStart, timeStop, new Date(), location.timeZone))
+    {
+    	//Arrival after sunset
+        if (entryLight != null)
+        {
+            for (light in entryLight)
+            {
+                if (light.hasCommand("setLevel"))	light.setLevel(80)
+                light.on()
+            }
+        }
+    }
+    
+    for (int x = 1; x <= counter; x++) 
+    { 
+    	def presence	= settings."presence_${x}"
+        
+        if (presence != null)
+        {
+			 if ( (presence as String) == thisGuy)
+             {
+                name 		= settings."name_${x}"
+                arrivals 	= settings."arrival_${x}"
+                if (name == null) name = "N/A"
+                if (arrivals)	  sendPush("$name ha llegado!")
+             }
+             
+             if (settings."presence_${x}".currentPresence == "present") 
+             {
+             	result++
+             }
+        }
+    }
+    
+    if (result == 1 && controlAccess)
+    {
+    	//first to arrive
+        log.warn "First person to arrive!"
+    }
     
     log.info "HomeTap Completed: $app.label (ArrivalHandler)"
 }
@@ -507,7 +577,39 @@ def departureHandler(evt)
 {
 	log.info "HomeTap Started: $app.label (DepartureHandler)"
     
+    def counter 		= number_of_users as Integer
+    def thisGuy     	= evt.device as String
+    def result			= true
+    def name			= ""
+    def departures		= false
     
+    for (int x = 1; x <= counter; x++) 
+    { 
+    	def presence	= settings."presence_${x}"
+        
+        if (presence != null)
+        {
+			 if ( (presence as String) == thisGuy)
+             {
+                name 		= settings."name_${x}"
+                departures 	= settings."departures_${x}"
+                if (name == null) name = "N/A"
+                if (departures)	  sendPush("Adiós $name!")
+             }
+             
+             if (settings."presence_${x}".currentPresence == "present") 
+             {
+             	result = false
+             }
+        }
+    }
+    
+    if (result && controlAccess)
+    {
+    	//last to leave
+        log.warn "Nobody´s home, activate security!"
+        ControlSecurity(result)
+    }
     
     
     log.info "HomeTap Completed: $app.label (DepartureHandler)"
@@ -517,19 +619,646 @@ def alarmHandler(evt)
 {
 	log.info "HomeTap Started: $app.label (AlarmHandler)"
     
-    
-    
+    def currentState = location.currentState("alarmSystemStatus")?.value
+    if (currentState == "away" || currentState == "stay")
+    {
+    	if (alarmLights != null)
+        {
+            if (alarmLights.hasCommand("setLevel")) alarmLights.setLevel(100)
+            if (alarmLights.hasCommand("setHue"))   alarmLights.setHue(100)
+            
+            for (int j = 0; j < 10; j++)
+            {
+                
+                alarmLights.on()
+                pause(600)
+                alarmLights.off()
+                pause(600)
+            }
+        }
+    }
     
     log.info "HomeTap Completed: $app.label (AlarmHandler)"
 }
 
-
-
-
-
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//  HELPERS
+//  HANDLERS FOR EACH DEVICE
 //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def Action_Lock(Number index, Boolean wasManual, Number Code )	
+{
+	def thisLock 		= settings."lock_${index}"
+	def noti_unlock		= settings."notify_unlock_${index}"
+    def noti_who		= settings."notify_who_${index}"
+    def autoLocks		= settings."autolock_${index}"
+    def horarios		= settings."schedules_${index}"
+          
+    log.info "Code used: $Code"
+    log.info "Manual: $wasManual"
+    log.info "Avisar Unlock: $noti_unlock"
+	log.info "Avisar Quien: $noti_who"
+	log.info "Autolock: $autoLocks secs"
+    
+    //Control of modes and alarm if required
+    ControlSecurity(false)
+	
+    if (autoLocks != null && autoLocks > 0)
+    {
+    	runIn(autoLocks, "Delay_Autolock", [data: [index_scenario: index]]) 
+    }
+    if (noti_unlock) 
+    {
+        if (wasManual) sendPush ("$thisLock fue abierta")
+        else if (noti_who)	
+        {
+            def thisUser = findUser(Code)
+        	sendPush("Hola $thisUser!")       
+        }
+    }    
+    
+    //Handler para horarios --------------------------------------------
+    log.info "Horarios = $horarios"
+    
+    def counter = horarios as Integer
+    for (int x = 1; x <= counter; x++) 
+    { 
+    	def fromtime	 		= settings."fromtime_${index}_${x}"       
+    	def totime 				= settings."totime_${index}_${x}"
+       		
+        def huecolor		    = settings."huecolor_${index}_${x}"       
+        def huelux				= settings."huelux_${index}_${x}"
+       
+        
+        def turnon				= settings."turnon_${index}_${x}"
+        def turnoff				= settings."turnoff_${index}_${x}"
+        def turnoffdelay		= settings."turnoffdelay_${index}_${x}"
+        
+        def sound				= settings."sound_${index}_${x}"
+
+        
+        
+        if (fromtime != null && totime != null)
+        {
+        	
+            if( CheckSchedule(index, x) )
+            {
+            	//Current Time is valid for actions
+                if (huecolor != null) 							ActionColor(index, x)
+                if (huelux 	 != null) 							ActionLux(  index, x)
+                if (sound	 != null) 							ActionSound(index, x)
+                if (turnon	 != null) 							settings."turnon_${index}_${x}"*.on()
+                if (turnoff  != null && turnoffdelay == null) 	settings."turnoff_${index}_${x}"*.off()
+                if (turnoff  != null && turnoffdelay != null) 	runIn(turnoffdelay*60, "Delay_TurnOff", [data: [index_scenario: index, index_horario:x]])              
+            }
+        
+        }
+        
+           
+    }
+
+}
+
+def CheckSchedule(Number index_scenario, Number index_horario)
+{
+	def result = false
+    def riseTime = getSunriseAndSunset().sunrise.time
+	def setTime  = getSunriseAndSunset().sunset.time 
+    def timeStart = ""
+    def timeStop  = ""
+
+    def fromtime	 		= settings."fromtime_${index_scenario}_${index_horario}"
+	def fromothertime		= settings."fromothertime_${index_scenario}_${index_horario}"
+    def fromoffsetvalue		= settings."fromoffsetvalue_${index_scenario}_${index_horario}"
+    def fromoffsetdir		= settings."fromoffsetdir_${index_scenario}_${index_horario}"
+       
+    def totime 				= settings."totime_${index_scenario}_${index_horario}"
+	def toothertime			= settings."toothertime_${index_scenario}_${index_horario}"
+    def tooffsetvalue		= settings."tooffsetvalue_${index_scenario}_${index_horario}"
+    def tooffsetdir			= settings."tooffsetdir_${index_scenario}_${index_horario}"
+    
+    if (fromtime != null && totime != null)
+    {
+    		//Time to Start
+     		switch (fromtime)
+            {
+            	case "Amanecer":
+                  				if (fromoffsetvalue != null)
+            					{
+            							if (fromoffsetdir == "Adelantar")
+                                        {
+                                            timeStart = new Date(riseTime - (fromoffsetvalue*60*1000 )).format("HH:mm", location.timeZone)
+                                        }
+                                        else if (fromoffsetdir == "Retrasar")
+                                        {
+                                            timeStart = new Date(riseTime + (fromoffsetvalue*60*1000 )).format("HH:mm", location.timeZone)
+                                        }
+                                        else
+                                            timeStart = new Date(riseTime).format("HH:mm", location.timeZone)
+            					}
+                                else
+                                    timeStart = new Date(riseTime).format("HH:mm", location.timeZone)
+                				break
+                                
+                                
+                case "Mediodia":
+                				if (fromoffsetvalue != null)
+            					{
+            							if (fromoffsetdir == "Adelantar")
+                                        {
+                                            timeStart = midday - (fromoffsetvalue*60*1000 )
+                                        }
+                                        else if (fromoffsetdir == "Retrasar")
+                                        {
+                                            timeStart = midday + (fromoffsetvalue*60*1000 )
+                                        }
+                                        else
+                                            timeStart = midday
+            					}
+                                else
+                                    timeStart = midday
+                				break
+                                
+                                
+                case "Atardecer":
+                				if (fromoffsetvalue != null)
+            					{
+            							if (fromoffsetdir == "Adelantar")
+                                        {
+                                            timeStart = new Date(setTime - (fromoffsetvalue*60*1000 )).format("HH:mm", location.timeZone)
+                                        }
+                                        else if (fromoffsetdir == "Retrasar")
+                                        {
+                                            timeStart = new Date(setTime + (fromoffsetvalue*60*1000 )).format("HH:mm", location.timeZone)
+                                        }
+                                        else
+                                            timeStart = new Date(setTime).format("HH:mm", location.timeZone)
+            					}
+                                else
+                                    timeStart = new Date(setTime).format("HH:mm", location.timeZone)
+                				break
+                                
+                                
+                case "Medianoche":
+                				if (fromoffsetvalue != null)
+            					{
+            							if (fromoffsetdir == "Adelantar")
+                                        {
+                                            timeStart = midnight - (fromoffsetvalue*60*1000 )
+                                        }
+                                        else if (fromoffsetdir == "Retrasar")
+                                        {
+                                            timeStart = midnight + (fromoffsetvalue*60*1000 )
+                                        }
+                                        else
+                                            timeStart = midnight
+            					}
+                                else
+                                    timeStart = midnight
+                				break
+                                
+                                
+                case "Especificar":
+                				if (fromothertime != null)	timeStart = fromothertime
+                				break
+                                
+                                
+                default:
+                				break
+            
+            }       
+        
+        	//Time to Finish
+            switch (totime)
+            {
+            	case "Amanecer":
+                  				if (tooffsetvalue != null)
+            					{
+            							if (tooffsetdir == "Adelantar")
+                                        {
+                                            timeStop = new Date(riseTime - (tooffsetvalue*60*1000 )).format("HH:mm", location.timeZone)
+                                        }
+                                        else if (tooffsetdir == "Retrasar")
+                                        {
+                                            timeStop = new Date(riseTime + (tooffsetvalue*60*1000 )).format("HH:mm", location.timeZone)
+                                        }
+                                        else
+                                            timeStop = new Date(riseTime).format("HH:mm", location.timeZone)
+            					}
+                                else
+                                    timeStop = new Date(riseTime).format("HH:mm", location.timeZone)
+                				break
+                                
+                                
+                case "Mediodia":
+                				if (tooffsetvalue != null)
+            					{
+            							if (tooffsetdir == "Adelantar")
+                                        {
+                                            timeStop = midday - (tooffsetvalue*60*1000 )
+                                        }
+                                        else if (tooffsetdir == "Retrasar")
+                                        {
+                                            timeStop = midday + (tooffsetvalue*60*1000 )
+                                        }
+                                        else
+                                            timeStop = midday
+            					}
+                                else
+                                    timeStop = midday
+                				break
+                                
+                                
+                case "Atardecer":
+                				if (tooffsetvalue != null)
+            					{
+            							if (tooffsetdir == "Adelantar")
+                                        {
+                                            timeStop = new Date(setTime - (tooffsetvalue*60*1000 )).format("HH:mm", location.timeZone)
+                                        }
+                                        else if (tooffsetdir == "Retrasar")
+                                        {
+                                            timeStop = new Date(setTime + (tooffsetvalue*60*1000 )).format("HH:mm", location.timeZone)
+                                        }
+                                        else
+                                            timeStop = new Date(setTime).format("HH:mm", location.timeZone)
+            					}
+                                else
+                                    timeStop = new Date(setTime).format("HH:mm", location.timeZone)
+                				break
+                                
+                                
+                case "Medianoche":
+                				if (tooffsetvalue != null)
+            					{
+            							if (tooffsetdir == "Adelantar")
+                                        {
+                                            timeStop = midnight - (tooffsetvalue*60*1000 )
+                                        }
+                                        else if (tooffsetdir == "Retrasar")
+                                        {
+                                            timeStop = midnight + (tooffsetvalue*60*1000 )
+                                        }
+                                        else
+                                            timeStop = midnight
+            					}
+                                else
+                                    timeStop = midnight
+                				break
+                                
+                                
+                case "Especificar":
+                				if (toothertime != null)	timeStop = toothertime
+                				break
+                                
+                                
+                default:
+                				break
+            
+            }          
+     
+     		result =  timeOfDayIsBetween(timeStart, timeStop, new Date(), location.timeZone)
+   }
+    
+    def newStart = ""
+    def newEnd   = ""
+    
+    if (timeStart.contains("-"))	newStart = Date.parse( "yyyy-MM-dd'T'HH:mm:ss.SSSX", timeStart ).format( 'HH:mm', location.timeZone )
+    else							newStart = timeStart
+    
+    if (timeStop.contains("-"))		newEnd = Date.parse( "yyyy-MM-dd'T'HH:mm:ss.SSSX", timeStop ).format( 'HH:mm', location.timeZone )
+    else							newEnd = timeStop
+    
+    def value = newStart + "-" + newEnd
+    
+	if (result) log.warn "schedule$index_horario =  $result ($value)" 
+    else  log.error "schedule$index_horario = $result ($value)" 
+	result
+}
+
+def ActionColor(Number index_scenario, Number index_horario)
+{
+     def hueColor           = 0
+     def hueBrightness      = 0
+     def hueSaturation      = 0
+     
+     def new_level_of_light = settings."huecolorlevel_${index_scenario}_${index_horario}"
+     def new_color_of_light = settings."huetone_${index_scenario}_${index_horario}"
+     def new_satur_of_light = settings."huesat_${index_scenario}_${index_horario}"
+     def new_quest_of_asian = false
+         
+     if (new_level_of_light != null) 								hueBrightness = getBrightnessValue(new_level_of_light)
+     else															hueBrightness = 80
+     
+     if (new_color_of_light != null && new_quest_of_asian != null) 	hueColor      = getColorValue(new_color_of_light, new_quest_of_asian)
+     else															hueColor	  = 23
+     
+     if (new_color_of_light != null && new_satur_of_light != null) 	hueSaturation = getSaturationValue(new_color_of_light, getBrightnessValue(new_satur_of_light))
+     else															hueSaturation = 90
+     
+     
+	 settings."huecolor_${index_scenario}_${index_horario}"*.setLevel(hueBrightness)
+     settings."huecolor_${index_scenario}_${index_horario}"*.setSaturation(hueSaturation)
+     settings."huecolor_${index_scenario}_${index_horario}"*.setHue(hueColor)
+     settings."huecolor_${index_scenario}_${index_horario}"*.on()
+
+}
+
+def ActionLux(Number index_scenario, Number index_horario)
+{
+     def hueBrightness      = 0
+    
+     def new_level_of_light = settings."hueluxlevel_${index_scenario}_${index_horario}"
+
+         
+     if (new_level_of_light != null) 	hueBrightness = getBrightnessValue(new_level_of_light)
+     else								hueBrightness = 80
+     
+    
+	 settings."huelux_${index_scenario}_${index_horario}"*.setLevel(hueBrightness)
+     settings."huelux_${index_scenario}_${index_horario}"*.on()
+
+}
+
+def ActionSound(Number index_scenario, Number index_horario)
+{
+   	def soundaction			= settings."soundaction_${index_scenario}_${index_horario}"
+   	def soundvolume			= settings."soundvolume_${index_scenario}_${index_horario}" 
+    def options = [:]
+	
+    if (soundvolume != null) 
+    {
+		settings."sound_${index}_${x}"*.setLevel(soundvolume as Integer)
+		options.delay = 1000
+	}
+    
+    if (soundaction != null)
+    {
+    	switch(soundaction)
+        {
+                case "Turn On & Play":
+                                    options ? settings."sound_${index}_${x}"*.on(options) : settings."sound_${index}_${x}"*.on()
+                                    break
+                case "Turn Off":
+                                    options ? settings."sound_${index}_${x}"*.off(options) : settings."sound_${index}_${x}"*.off()
+                                    break
+                case "Toggle Play/Pause":
+                                    def currentStatus = settings."sound_${index}_${x}"*.currentValue("playpause")
+                                    if (currentStatus == "play") {
+                                        options ? settings."sound_${index}_${x}"*.pause(options) : settings."sound_${index}_${x}"*.pause()
+                                    }
+                                    else if (currentStatus == "pause") {
+                                        options ? settings."sound_${index}_${x}"*.play(options) : settings."sound_${index}_${x}"*.play()
+                                    }
+                                    break
+                case "Skip to Next Track":
+                                    options ? settings."sound_${index}_${x}"*.nextTrack(options) : settings."sound_${index}_${x}"*.nextTrack()
+                                    break
+                case "Skip to Beginning/Previous Track":
+                                    options ? settings."sound_${index}_${x}"*.previousTrack(options) : settings."sound_${index}_${x}"*.previousTrack()
+                                    break
+                case "Play Preset 1":
+                                    options ? settings."sound_${index}_${x}"*.preset1(options) : settings."sound_${index}_${x}"*.preset1()
+                                    break
+                case "Play Preset 2":
+                                    options ? settings."sound_${index}_${x}"*.preset2(options) : settings."sound_${index}_${x}"*.preset2()
+                                    break 
+                case "Play Preset 3":
+                                    options ? settings."sound_${index}_${x}"*.preset3(options) : settings."sound_${index}_${x}"*.preset3()
+                                    break
+                case "Play Preset 4":
+                                    options ? settings."sound_${index}_${x}"*.preset4(options) : settings."sound_${index}_${x}"*.preset4()
+                                    break
+                case "Play Preset 5":
+                                    options ? settings."sound_${index}_${x}"*.preset5(options) : settings."sound_${index}_${x}"*.preset5()
+                                    break
+                case "Play Preset 6":
+                                    options ? settings."sound_${index}_${x}"*.preset6(options) : settings."sound_${index}_${x}"*.preset6()
+                                    break
+                case "Select Song..":
+                                    options ? settings."sound_${index}_${x}"*.playTrack(options) : settings."sound_${index}_${x}"*.playTrack(state.selectedSong)
+                                    break
+                case "Change to Aux..":
+                                    options ? settings."sound_${index}_${x}"*.aux(options) : settings."sound_${index}_${x}"*.aux()
+                                    //runIn(2, ChangeToAux )
+                                    break
+                case "Join":
+                                    options ? settings."sound_${index}_${x}"*.everywhereJoin(options) : settings."sound_${index}_${x}"*.everywhereJoin()
+                                    break
+                case "Leave":
+                                    options ? settings."sound_${index}_${x}"*.everywhereLeave(options) : settings."sound_${index}_${x}"*.everywhereLeave()
+                                    break
+                default:
+                    				break        
+       
+        }       
+    
+    }
+
+}
+
+def Delay_TurnOff (data)
+{
+    settings."turnoff_${data.index_scenario}_${data.index_horario}"*.off()
+}
+
+def Delay_Autolock (data)
+{
+	def lock = settings."lock_${data.index_scenario}"
+    settings."lock_${data.index_scenario}".lock()
+    log.warn "$lock se ha cerrado!"
+}
+
+def ControlSecurity (Boolean nobodyAtHome)
+{
+	def currentTime  = now()
+    def riseTime 	 = getSunriseAndSunset().sunrise.time
+    def late   		 = timeToday(alarmLateTime, location?.timeZone).time
+    
+    if (controlAccess)
+    {
+    	if (controlModes)
+        {
+        	if (nobodyAtHome)
+            {
+            	if (location.mode != "away")	
+                {
+                	setLocationMode("Away")
+                    log.warn "Mode change to Away"
+                }
+            }
+            else
+            {
+            	if (currentTime > late && currentTime < riseTime) 
+                { 
+                	setLocationMode("Night")
+                    log.warn "Mode change to Armed"
+                }
+                else	
+                {	
+                	setLocationMode("Home")
+                    log.warn "Mode change to Home"
+                }                
+            }        
+        }
+    
+    	if (controlAlarm)
+        {
+        	if (nobodyAtHome)
+            {
+            	sendLocationEvent(name: "alarmSystemStatus", value: "away")
+                log.warn "Alarm is Armed(Away)"
+            }
+            else
+            {
+                if (currentTime > late && currentTime < riseTime) 
+                { 
+                	sendLocationEvent(name: "alarmSystemStatus", value: "stay")
+                    log.warn "Alarm is Armed(Home)"
+                }
+                else
+                {
+                	sendLocationEvent(name: "alarmSystemStatus", value: "off")
+                    log.warn "Alarm is Disarmed"
+                }
+            }
+        
+        }
+    
+    }
+
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//	HELPERS FOR COLOR SETTINGS
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+int getColorValue (String color_name, Boolean is_chinese)
+{
+	def color = 0
+
+    
+    switch (color_name)
+    {
+		case "Random":
+        	color = new Random().nextInt(90) + 10
+        	break
+        case "White":
+			color = 52
+			break;
+		case "Daylight":
+			color = 53
+			break;
+		case "Soft White":
+			color = 23
+			break;
+		case "Warm White":
+        	if (is_chinese) color = 16
+			else color = 22
+			break;
+		case "Blue":
+			color = 70
+			break;
+		case "Green":
+			color = 39
+			break;
+		case "Yellow":
+			color = 25
+			break;
+		case "Orange":
+			color = 10
+			break;
+		case "Purple":
+			color = 75
+			break;
+		case "Pink":
+			color = 83
+			break;
+		case "Red":
+			color = 100
+			break;
+        default:
+        	break
+                
+    }
+    
+    color
+
+}
+
+int getSaturationValue (String color_name, int selected_value )
+{
+    def saturation = 100
+    
+    switch (color_name)
+    {
+		case "Random":
+        	saturation = new Random().nextInt(70) + 30
+            break
+        case "White":
+			saturation = 19
+			break;
+		case "Daylight":
+			saturation = 91
+			break;
+		case "Soft White":
+			saturation = 56
+			break;
+		case "Warm White":
+			saturation = 48 //80
+			break;
+        default:
+        	saturation = selected_value
+        	break
+                
+    }
+    
+    saturation
+
+}
+
+int getBrightnessValue (String percentage)
+{
+	def brightness = 0
+    
+    switch (percentage)
+    {
+		case "10%":
+			brightness = 10
+			break;
+		case "20%":
+			brightness = 20
+			break;
+		case "30%":
+			brightness = 30
+			break;
+		case "40%":
+			brightness = 40
+			break;
+		case "50%":
+			brightness = 50
+			break;
+		case "60%":
+			brightness = 60
+			break;
+		case "70%":
+			brightness = 70
+			break;
+		case "80%":
+			brightness = 80
+			break;
+		case "90%":
+			brightness = 90
+			break;
+		case "100%":
+			brightness = 100
+			break;
+        default:
+        	break
+                
+    }
+    
+    brightness
+
+}
+
 def saturationNeeded(String color)
 {
 	def result = false
@@ -543,19 +1272,28 @@ def saturationNeeded(String color)
     result    
 }
 
-def Action_Lock(Number index )	
-{
-	def thisLock 		= settings."lock_${index}"
-	def noti_unlock		= settings."notify_unlock_${index}"
-    def noti_who		= settings."notify_who_${index}"
-    def autoLocks		= settings."autolock_${index}"
-    def horarios		= settings."schedules_${index}"
-    
-    log.warn "Lock at Scenario: $index"
-    log.warn "ThisLock = $thisLock"
-    log.warn "ThisLock = $noti_unlock"
-	log.warn "ThisLock = $noti_who"
-	log.warn "ThisLock = $autoLocks"
-	log.warn "ThisLock = $horarios"
 
+//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//	HELPERS FOR USER
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+def findUser(Number code)
+{
+	def user 	 = ""
+    def thisCode = "Code "
+    def userCode = ""
+    
+    if (code == 0)	thisCode = "App"
+    else            thisCode += code
+              
+    def counter	 =	number_of_users as Integer
+    
+    for (int x = 1; x <= counter; x++) 
+    {
+		userCode = settings."code_${x}"
+        if (userCode == thisCode) user = settings."name_${x}"
+	}
+    
+    if (user == "")	user = "N/A"
+    
+    user
 }
