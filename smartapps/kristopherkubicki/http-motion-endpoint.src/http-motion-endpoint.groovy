@@ -80,8 +80,8 @@ def viewURL() {
                 
 
 			}
-                log.warn "Activate: https://graph.api.smartthings.com/api/smartapps/installations/${app.id}/active?access_token=${state.accessToken}"
-    			log.warn "Deactivate: https://graph.api.smartthings.com/api/smartapps/installations/${app.id}/inactive?access_token=${state.accessToken}"
+                log.warn "Activate: https://graph-na02-useast1.api.smartthings.com/api/smartapps/installations/${app.id}/active?access_token=${state.accessToken}"
+    			log.warn "Deactivate: https://graph-na02-useast1.api.smartthings.com/api/smartapps/installations/${app.id}/inactive?access_token=${state.accessToken}"
 	}
     
 
